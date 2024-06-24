@@ -1,0 +1,44 @@
+pipeline {
+    agent any
+    stages {
+        stage('Pull') {
+            steps {
+                echo "Successful pull from Git"
+                git 'https://github.com/Shrungali2805/simple-reactjs-app.git'
+            }
+        }
+        stage('Build') {
+            steps {
+                echo "Building with Maven"
+                sh 'mvn clean package'
+            }
+        }
+        stage('creating react image React') {
+            steps {
+                script {
+                    sh '''cp -r /var/lib/jenkins/workspace/deploy/target/*.war .
+                    docker build -t shrungali2805/reactjs-app1 . 
+                    docker login 
+                    docker push shrungali2805/reactjs-app1'''
+                }
+            }
+        }
+        stage('build image on k8 ') {
+            steps {
+                script {
+                    sh 'kubectl apply -f deployment.yaml'
+                }
+            }
+        }
+        stage('getting info') {
+            steps {
+                script {
+                    sh '''kubectl get pods -o wide 
+                    kubectl get nodes -o wide 
+                    kubectl get svc -o wide 
+                    ls /var/lib/jenkins/workspace/deploy/target/'''
+                }
+            }
+        }
+    }
+} //update
